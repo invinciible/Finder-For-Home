@@ -22,6 +22,7 @@ class ItemCell: UITableViewCell {
         name.text = item.name
         locationDetails.text = item.locationDetail
         mainLocation.text = item.location
+        thumbImg.image = item.toImage?.image as? UIImage
     }
     
 }

@@ -9,10 +9,11 @@
 import UIKit
 import CoreData
 
-class MainVC: UIViewController ,UITableViewDelegate,UITableViewDataSource, NSFetchedResultsControllerDelegate {
+class MainVC: UIViewController ,UITableViewDelegate,UITableViewDataSource, NSFetchedResultsControllerDelegate , UISearchBarDelegate {
 
     @IBOutlet weak var segmentedView: UISegmentedControl!
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var searchBar: UISearchBar!
     
     var controller : NSFetchedResultsController<Item>!
     
@@ -21,7 +22,7 @@ class MainVC: UIViewController ,UITableViewDelegate,UITableViewDataSource, NSFet
         
         tableView.delegate = self
         tableView.dataSource = self
-        // generateTestData()
+        searchBar.delegate = self
         attemptFetch()
         
     }
@@ -57,17 +58,51 @@ class MainVC: UIViewController ,UITableViewDelegate,UITableViewDataSource, NSFet
         return 0
     }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        if let objc = controller.fetchedObjects, objc.count > 0 {
+            
+            let item = objc[indexPath.row]
+            
+            performSegue(withIdentifier: "ItemDetailsVC", sender: item)
+            
+        }
+    }
     
+    // to pass the data from the selected table cell
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        if segue.identifier == "ItemDetailsVC" {
+            
+            if let destination = segue.destination as? ItemAddVC {
+               
+                if let item = sender as? Item {
+                    
+                    destination.ItemToEdit = item
+                }
+            }
+        }
+    }
     func attemptFetch(){
         
         let fetchRequest : NSFetchRequest<Item> = Item.fetchRequest()
         // entity to request the data from 
         let dateSort = NSSortDescriptor(key: "createdOn", ascending: false)
+        let NameSort = NSSortDescriptor(key: "name", ascending: true)
         // which data to fetch first and how to sort it
         
-        fetchRequest.sortDescriptors = [dateSort]
+        if segmentedView.selectedSegmentIndex == 0 {
+            
+            fetchRequest.sortDescriptors = [dateSort]
+        }
+        else {
+            if segmentedView.selectedSegmentIndex == 1 {
+                fetchRequest.sortDescriptors = [NameSort]
+            }
+        }
         
        let controller = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: context, sectionNameKeyPath: nil, cacheName: nil)
+        controller.delegate = self
         self.controller = controller
         
         do {
@@ -79,6 +114,13 @@ class MainVC: UIViewController ,UITableViewDelegate,UITableViewDataSource, NSFet
         }
         
     }
+    
+    @IBAction func SegmentChangePressed(_ sender: Any) {
+        attemptFetch()
+        tableView.reloadData()
+    }
+    
+    
     // notifies reciever that the controller is about to start fectching updates
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         
@@ -122,30 +164,7 @@ class MainVC: UIViewController ,UITableViewDelegate,UITableViewDataSource, NSFet
         }
         
     }
-    func generateTestData(){
-        
-        let item = Item(context: context)
-        item.name = "mobile"
-        item.location = "bedroom"
-        item.locationDetail = "on the refrigerator"
-        
-        let item2 = Item(context: context)
-        item2.name = "mobile"
-        item2.location = "bedroom"
-        item2.locationDetail = "on the refrigerator"
-        
-        let item3 = Item(context: context)
-        item3.name = "mobile"
-        item3.location = "bedroom"
-        item3.locationDetail = "on the refrigerator"
-        
-        let item4 = Item(context: context)
-        item4.name = "mobile"
-        item4.location = "bedroom"
-        item4.locationDetail = "on the refrigerator"
-        
-        ad.saveContext()
-    }
+ 
     
     
     
